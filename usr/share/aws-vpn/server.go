@@ -6,12 +6,13 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 )
 
 func main() {
 	http.HandleFunc("/", SAMLServer)
-	log.Printf("Starting HTTP server at 127.0.0.1:35001")
 	http.ListenAndServe("127.0.0.1:35001", nil)
+	os.Exit(0)
 }
 
 func SAMLServer(w http.ResponseWriter, r *http.Request) {
@@ -26,9 +27,10 @@ func SAMLServer(w http.ResponseWriter, r *http.Request) {
 			log.Printf("SAMLResponse field is empty or not exists")
 			return
 		}
-		ioutil.WriteFile("saml-response.txt", []byte(url.QueryEscape(SAMLResponse)), 0600)
-		fmt.Fprintf(w, "Got SAMLResponse field, it is now safe to close this window\n")
-		log.Printf("Got SAMLResponse field and saved it to the saml-response.txt file")
+		ioutil.WriteFile("/tmp/saml-response.txt", []byte(url.QueryEscape(SAMLResponse)), 0600)
+		w.Header().Add("Content-Type", "text/html")
+		fmt.Fprintf(w, "Got SAMLResponse field, it is now safe to close this window"+
+			"<script>window.close()</script>")
 		return
 	default:
 		fmt.Fprintf(w, "Error: POST method expected, %s recieved", r.Method)
