@@ -4,9 +4,9 @@ exec 3>&1 1>>/var/log/aws-vpn.log 2>&1
 set -e
 
 
-# path to the patched openvpn
+# Path to the patched openvpn
 OVPN_BIN="/usr/share/aws-vpn/openvpn"
-# path to the configuration file
+# Path to the configuration file
 OVPN_CONF="/etc/aws-vpn.conf"
 # Path to the http server
 SERVER_BIN="/usr/share/aws-vpn/server.go"
@@ -76,7 +76,13 @@ case "$1" in
 
 esac
 
-# Check if hte VPN is running to avoid starting it several times
+# Check if the configuration file exists
+if [[ ! -f ${OVPN_CONF} ]]; then
+  echo -e "\033[0;31mconfiguration file does not exist, it must be: \033[m$'{OVPN_CONF}'" >&3
+  exit 1
+fi
+
+# Check if the VPN is running to avoid starting it several times
 if [[ -n ${OVPN_PID} ]]; then
   echo -e "\033[0;31mAWS VPN already launched\033[m\ntry '$0 --restart'" >&3
   exit 1
