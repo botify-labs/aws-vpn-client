@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# Setup files
+mkdir -p /usr/share/aws-vpn
+touch /var/log/aws-vpn.log
+chown root:adm /var/log/aws-vpn.log
+chmod 775 /var/log/aws-vpn.log
+
+exit 0

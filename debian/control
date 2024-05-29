@@ -1,0 +1,10 @@
+Source: aws-vpn
+Maintainer: Flavien Montois <flavien.montois@botify.com>
+Section: misc
+Priority: optional
+Build-Depends: liblz4-dev, libssl-dev, liblzo2-dev, libpam0g-dev, libnl-3-dev, libnl-genl-3-dev, libcap-ng-dev, pkg-config
+Standards-version: 0.1-1
+
+Package: aws-vpn
+Architecture: amd64
+Description: Debian package to connect to the AWS Client VPN using SSO

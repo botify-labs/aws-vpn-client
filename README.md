@@ -1,37 +1,36 @@
-# aws-vpn-client
+# Package aws-vpn-client
+---
 
-This is PoC to connect to the AWS Client VPN with OSS OpenVPN using SAML
-authentication. Tested on macOS and Linux, should also work on other POSIX OS with a minor changes.
+Based on [this repo](https://github.com/samm-git/aws-vpn-client) made by [samm-git](https://github.com/samm-git)
 
-See [my blog post](https://smallhacks.wordpress.com/2020/07/08/aws-client-vpn-internals/) for the implementation details.
+The aim of this repo is to have an easy way to connect to an Amazon Client VPN using SSO.
+A convenient way to do so is a debian package installing everything needed to connect to a VPN
+A single command start OpenVPN as a daemon allowing to close the terminal without worries
 
-P.S. Recently [AWS released Linux desktop client](https://aws.amazon.com/about-aws/whats-new/2021/06/aws-client-vpn-launches-desktop-client-for-linux/), however, it is currently available only for Ubuntu, using Mono and is closed source. 
-
-## Content of the repository
-
-- [openvpn-v2.4.9-aws.patch](openvpn-v2.4.9-aws.patch) - patch required to build
-AWS compatible OpenVPN v2.4.9, based on the
-[AWS source code](https://amazon-source-code-downloads.s3.amazonaws.com/aws/clientvpn/osx-v1.2.5/openvpn-2.4.5-aws-2.tar.gz) (thanks to @heprotecbuthealsoattac) for the link.
-- [server.go](server.go) - Go server to listed on http://127.0.0.1:35001 and save
-SAML Post data to the file
-- [aws-connect.sh](aws-connect.sh) - bash wrapper to run OpenVPN. It runs OpenVPN first time to get SAML Redirect and open browser and second time with actual SAML response
+Note that the patched version of OpenVPN is nowhere in this repo, it is dowloaded, patched and builded When building the package.
 
 ## How to use
 
-1. Build patched openvpn version and put it to the folder with a script
-1. Start HTTP server with `go run server.go`
-1. Set VPN_HOST in the [aws-connect.sh](aws-connect.sh)
-1. Replace CA section in the sample [vpn.conf](vpn.conf) with one from your AWS configuration
-1. Finally run `aws-connect.sh` to connect to the AWS.
+### Building and istalling the package
+```
+dpkg-buildpackage -b -rfakeroot -tc -us -uc
+sudo dpkg -i ../aws-vpn_0.1-1_amd64.deb
+```
 
-### Additional Steps
+### Configuration
+**Yout configuration file must be `/etc/aws-vpn.conf`**
 
-Inspect your ovpn config and remove the following lines if present
+Be sure to put this fields in your openvpn counfiguration file:
+- `proto`
+- `remote` (vpn endpoint and port)
+
+And also remove:
 - `auth-user-pass` (we dont want to show user prompt)
 - `auth-federate` (propietary AWS keyword)
 - `auth-retry interact` (do not retry on failures)
-- `remote` and `remote-random-hostname` (already handled in CLI and can cause conflicts with it)
 
-## Todo
+Finally run `aws-vpn` to connect to you AWS VPN and `aws-vpn --kill` to disconnect.
+More option are available for this command try `aws-vpn --help`
 
-Better integrate SAML HTTP server with a script or rewrite everything on golang
+### More information
+Since openvpn and the http server run as a daemon, if there is an issue the outpups are redirected to `/var/log/aws-vpn.log`

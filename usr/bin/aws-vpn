@@ -1,0 +1,148 @@
+#!/usr/bin/env bash
+
+exec 3>&1 1>>/var/log/aws-vpn.log 2>&1
+set -e
+
+
+# path to the patched openvpn
+OVPN_BIN="/usr/share/aws-vpn/openvpn"
+# path to the configuration file
+OVPN_CONF="/etc/aws-vpn.conf"
+# Path to the http server
+SERVER_BIN="/usr/share/aws-vpn/server.go"
+# Find the PID of the last VPN process if there is any
+OVPN_PID=$(ps aux | grep $OVPN_BIN | grep -v grep | awk '{print $2}')
+
+
+### Functions
+stop_vpn() {
+  echo "trying to kill AWS VPN process..." >&3
+  if [[ -n ${OVPN_PID} ]]; then
+    sudo kill $OVPN_PID
+    echo -e "\033[0;32mVPN stoped successfully\033[m" >&3
+  else
+    echo "AWS VPN is not running" >&3
+  fi
+  # Reset OpenVPN PID
+  OVPN_PID=""
+}
+
+status() {
+  if [[ -n $OVPN_PID ]]; then
+    echo -e "\033[0;32mAWS VPN is running\033[m" >&3
+  else
+    echo -e "\033[0;31mAWS VPN is not running\033[m" >&3
+  fi
+}
+
+wait_file() {
+  local file="$1"; shift
+  local wait_seconds="${1:-10}"; shift # 10 seconds as default timeout
+  until test $((wait_seconds--)) -eq 0 -o -f "$file" ; do sleep 1; done
+  ((++wait_seconds))
+}
+
+
+### Flags
+[[ -n $2 ]] && echo "command '$0' only accept one flag at a time" >&3 && exit 1
+case "$1" in
+
+  --kill|-k)
+    stop_vpn
+    exit 0
+    ;;
+
+  --status|-s)
+    status
+    exit 0
+    ;;
+
+  --restart|-r)
+    stop_vpn
+    ;;
+
+  --help|-h)
+    man aws-vpn | cat >&3
+    exit 0
+    ;;
+
+  *)
+    if [[ -n $1 ]]; then
+      echo "flag '$1' unrecognized"
+      man aws-vpn
+      exit 1
+    fi
+    ;;
+
+esac
+
+# Check if hte VPN is running to avoid starting it several times
+if [[ -n ${OVPN_PID} ]]; then
+  echo -e "\033[0;31mAWS VPN already launched\033[m\ntry '$0 --restart'" >&3
+  exit 1
+fi
+
+# Create random hostname prefix for the vpn gateway
+RAND=$(openssl rand -hex 12)
+# Resolve manually hostname to IP, as we have to keep persistent ip address
+SRV=$(dig a +short "${RAND}.${VPN_HOST}"|head -n1)
+
+# Clean prvious saml file
+rm -f /tmp/saml-response.txt
+
+OVPN_OUT=$($OVPN_BIN --config "${OVPN_CONF}" --verb 3 \
+     --proto "udp" --remote "${SRV}" "${PORT}" \
+     --auth-user-pass <( printf "%s\n%s\n" "N/A" "ACS::35001" ) \
+    2>&1 | grep AUTH_FAILED,CRV1)
+
+# Start http server and open a browser to retrieve SAML file
+echo "Opening browser and wait for the response file..." >&3
+URL=$(echo "$OVPN_OUT" | grep -Eo 'https://.+')
+
+go run $SERVER_BIN &
+
+unameOut="$(uname -s)"
+case "${unameOut}" in
+    Linux*)     xdg-open "$URL";;
+    Darwin*)    open "$URL";;
+    *)          echo "Could not determine 'open' command for this OS"; exit 1;;
+esac
+
+wait_file "/tmp/saml-response.txt" 30 || {
+  echo "SAML Authentication time out" >&3
+  exit 1
+}
+
+# Get SID from the reply
+VPN_SID=$(echo "$OVPN_OUT" | awk -F : '{print $7}')
+
+echo "Running OpenVPN with sudo. Enter password if requested" >&3
+
+# Finally OpenVPN with a SAML response we got
+# Openvpn sometimes doesn't want to cooperate so we try 15 times
+declare -i retry=0
+
+while [[ ${retry} -lt 14 ]]; do
+  sudo bash -c "$OVPN_BIN --config "${OVPN_CONF}" \
+    --daemon \
+    --verb 3 \
+    --auth-nocache \
+    --inactive 3600 \
+    --script-security 2 \
+    --auth-user-pass <( printf \"%s\n%s\n\" \"N/A\" \"CRV1::${VPN_SID}::$(cat /tmp/saml-response.txt)\" )"
+
+  sleep 3
+  OVPN_PID=$(ps aux | grep $OVPN_BIN | grep -v grep | awk '{print $2}')
+
+  if [[ -n ${OVPN_PID} ]]; then
+    echo -e "\033[0;32mConnection to VPN OK\033[m" >&3
+    exit 0
+  elif [[ ${retry} -eq 14 ]]; then
+    echo -e "\033[0;31mError max retry exceeded\033[m" >&3
+    exit 1
+  else
+    retry=$retry+1
+  fi
+done
+
+exit 0

@@ -1,0 +1,37 @@
+.TH aws\-vpn 1
+.SH NAME
+aws-vpn \- Connect to an AWS client VPN with single sign on
+.SH DESCRIPTION
+This program is used to connact an Amazon Web Services Client VPN Endpoint with single sign\-On.
+It Used a modified version of OpenVPN
+
+It start an http server and open a browser to get the SAML response then use it to connect with OpenVPN
+.SH SYNOPSIS
+.B aws\-vpn [OPTIONS]
+.SH OPTIONS
+.TP
+\-h, \-\-help
+Print this help text and exit
+.TP
+\-k, \-\-Kill
+Kill the VPN process
+.TP
+\-r, \-\-restart
+Kill the VPN process if there is one and start it again
+.TP
+\-s, \-\-status
+Print if the VPN is up or down
+.SH CONFIGURATION
+The OpenVPN configuration file needs to be:
+.B /etc/aws\-vpn.conf
+.SH FILES
+.B /usr/bin/aws\-vpn
+.TP
+.B /usr/share/aws\-vpn/server.go
+.TP
+.B /usr/share/aws\-vpn/openvpn
+.TP
+,SH LOGS
+.B /var/log/aws\-vpn.log
+.SH NOTES
+Currently this command is very experimental
