@@ -12,18 +12,22 @@ rm -rf build_openvpn || True
 mkdir build_openvpn
 cd build_openvpn
 
+# Get OpenVPN <version>
 echo -e "\n\033[1;34mRetrieving openvpn-$1 source...\033[m\n"
 wget https://swupdate.openvpn.org/community/releases/openvpn-$1.tar.gz
 tar xzvf openvpn-$1.tar.gz &>/dev/null
 cd openvpn-$1
 
+# Patch it
 echo -e "\033[1;34mPatching openvpn...\033[m\n"
 patch -p1 < ../../patches/openvpn-v$1-aws.patch
 
+# Build it
 echo -e "\n\033[1;34mBuilding patched openvpn...\033[m\n"
 ./configure &>/dev/null
 make &>/dev/null
 
+# Remove the source code and move binary to usr/share/aws-vpn/openvpn
 echo -e "\033[1;34mCleaning...\033[m\n"
 mv ./src/openvpn/openvpn ../../usr/share/aws-vpn/openvpn
 cd ../../
