@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - "master"
+  pull_request:
+
+jobs:
+  release-tag:
+    name: Release git tag
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    if: github.event_name == 'push'
+    steps:
+      - 
+        name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      -
+        name: Tag new minor release
+        id: tag
+        run: |
+          set -eux
+
+          # Get latest github tag
+          current=$(git tag | sort -h | tail -n 1)
+
+          if git describe --tags --exact-match HEAD; then
+            echo "On commit $current, tag ${SHA} already exists. Stopping here."
+            exit 0
+          fi
+
+          # Set new tag
+          major="$(echo $current | cut -d. -f1)"
+          minor="$(echo $current | cut -d. -f2)"
+
+          minor=$((minor + 1))
+          new_tag="${major}.${minor}"
+
+          ### Build debian package
+
+          # Install dependencies
+          sudo apt install liblzo2-dev libpam0g-dev libnl-3-dev libnl-genl-3-dev libcap-ng-dev dh-make git-buildpackage
+          
+          # Set new version
+          version=$(dpkg-parsechangelog --show-field Version)
+          major="$(echo $version | cut -d. -f1)"
+          minor="$(echo $version | cut -d. -f2)"
+          minor=$((minor + 1))
+          new_version="${major}.${minor}"
+
+          # Update changlog
+          EMAIL=flavien.montois@botify.com gbp dch --ignore-branch -N ${new_version}
+
+          # Build package
+          dpkg-buildpackage -b -rfakeroot -tc -us -uc
+
+          # Release tag and package
+          gh release create ${new_tag} --generate-notes --notes-start-tag ${current} ../aws-vpn_${new_version}_amd64.deb
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.sha }}
+      -
+        name: Commit changelog
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: Auto update debian changelog

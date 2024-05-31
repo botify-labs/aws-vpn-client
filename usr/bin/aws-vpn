@@ -78,7 +78,7 @@ esac
 
 # Check if the configuration file exists
 if [[ ! -f ${OVPN_CONF} ]]; then
-  echo -e "\033[0;31mconfiguration file does not exist, it must be: \033[m$'{OVPN_CONF}'" >&3
+  echo -e "\033[0;31mconfiguration file does not exist, it must be: \033[m'${OVPN_CONF}'" >&3
   exit 1
 fi
 
