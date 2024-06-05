@@ -92,6 +92,10 @@ fi
 RAND=$(openssl rand -hex 12)
 # Resolve manually hostname to IP, as we have to keep persistent ip address
 SRV=$(dig a +short "${RAND}.${VPN_HOST}"|head -n1)
+if [[ -z ${SRV} ]]; then
+    echo -e "\033[0;31mThe VPN host is missing in the configuration\033[m" >&3
+    exit 1
+fi
 
 # Clean prvious saml file
 rm -f /tmp/saml-response.txt
