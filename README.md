@@ -12,8 +12,14 @@ Note that the patched version of OpenVPN is nowhere in this repo, it is dowloade
 ## How to use
 
 ### Building and istalling the package
-```
+```bash
+# Build tools
 sudo apt install dh-make dpkg-dev -y
+
+# Build dependencies
+sudo apt install libssl-dev liblzo2-dev libpam0g-dev libnl-3-dev libnl-genl-3-dev libcap-ng-dev -y
+
+# Build and install the DEB package
 dpkg-buildpackage -b -rfakeroot -tc -us -uc
 sudo dpkg -i ../aws-vpn_0.1-1_amd64.deb
 ```
