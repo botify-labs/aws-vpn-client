@@ -1,10 +1,11 @@
-aws-vpn (0.3) UNRELEASED; urgency=medium
+aws-vpn (0.4) UNRELEASED; urgency=medium
 
   [ FlavienMontois ]
   * CI
   * doc-nitpicks
+  * remove some variables
 
- --  <flavien.montois@botify.com>  Wed, 05 Jun 2024 14:23:02 +0000
+ --  <flavien.montois@botify.com>  Thu, 06 Jun 2024 10:10:35 +0000
 
 aws-vpn (0.1) unstable; urgency=low
 
