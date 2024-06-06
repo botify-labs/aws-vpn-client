@@ -88,20 +88,15 @@ if [[ -n ${OVPN_PID} ]]; then
   exit 1
 fi
 
-# Create random hostname prefix for the vpn gateway
-RAND=$(openssl rand -hex 12)
-# Resolve manually hostname to IP, as we have to keep persistent ip address
-SRV=$(dig a +short "${RAND}.${VPN_HOST}"|head -n1)
-if [[ -z ${SRV} ]]; then
-    echo -e "\033[0;31mThe VPN host is missing in the configuration\033[m" >&3
-    exit 1
+if [[ -n $(grep "auth-federate" ${OVPN_CONF}) ]]; then
+  echo -e "\033[0;31mUnsupported parameters in configuration\033[m" >&3
+  exit 1
 fi
 
 # Clean prvious saml file
 rm -f /tmp/saml-response.txt
 
 OVPN_OUT=$($OVPN_BIN --config "${OVPN_CONF}" --verb 3 \
-     --proto "udp" --remote "${SRV}" "${PORT}" \
      --auth-user-pass <( printf "%s\n%s\n" "N/A" "ACS::35001" ) \
     2>&1 | grep AUTH_FAILED,CRV1)
 
