@@ -42,6 +42,23 @@ wait_file() {
   ((++wait_seconds))
 }
 
+check_update() {
+  local current_ver=$(dpkg -s aws-vpn | grep '^Version:' | awk '{ print $2 }')
+  # Get the latest tag from github API, exit the function if the api is unreachable
+  local latest_ver=$(curl -s \
+  -H "Accept: application/vnd.github.v3+json" \
+  https://api.github.com/repos/botify-labs/aws-vpn-client/tags \
+  | jq -r '.[0].name') || return 0
+
+  # Compare versions
+  local current_minor="$(echo $current_ver | cut -d. -f2)"
+  local latest_minor="$(echo $latest_ver | cut -d. -f2)"
+  local current_major="$(echo $current_ver | cut -d. -f1)"
+  local latest_major="$(echo $latest_ver | cut -d. -f1)"
+  if [[ $current_minor -lt $latest_minor || $current_major -lt $latest_major ]]; then
+    echo -e "\033[1;33mNew version of aws-vpn is available\033[0m"
+  fi
+}
 
 ### Flags
 [[ -n $2 ]] && echo "command '$0' only accept one flag at a time" >&3 && exit 1
@@ -68,8 +85,8 @@ case "$1" in
 
   *)
     if [[ -n $1 ]]; then
-      echo "flag '$1' unrecognized"
-      man aws-vpn
+      echo -e "\033[0;31mflag '$1' unrecognized\033[m" >&3
+      man aws-vpn | cat >&3
       exit 1
     fi
     ;;
@@ -95,6 +112,8 @@ fi
 
 # Clean prvious saml file
 rm -f /tmp/saml-response.txt
+
+check_update >&3
 
 OVPN_OUT=$($OVPN_BIN --config "${OVPN_CONF}" --verb 3 \
      --auth-user-pass <( printf "%s\n%s\n" "N/A" "ACS::35001" ) \
