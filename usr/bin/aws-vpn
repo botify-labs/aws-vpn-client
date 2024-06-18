@@ -9,7 +9,7 @@ OVPN_BIN="/usr/share/aws-vpn/openvpn"
 # Path to the configuration file
 OVPN_CONF="/etc/aws-vpn.conf"
 # Path to the http server
-SERVER_BIN="/usr/share/aws-vpn/server.go"
+SERVER_BIN="/usr/share/aws-vpn/go_server"
 # Find the PID of the last VPN process if there is any
 OVPN_PID=$(ps aux | grep $OVPN_BIN | grep -v grep | awk '{print $2}')
 
@@ -123,7 +123,7 @@ OVPN_OUT=$($OVPN_BIN --config "${OVPN_CONF}" --verb 3 \
 echo "Opening browser and wait for the response file..." >&3
 URL=$(echo "$OVPN_OUT" | grep -Eo 'https://.+')
 
-go run $SERVER_BIN &
+$SERVER_BIN &
 
 unameOut="$(uname -s)"
 case "${unameOut}" in
