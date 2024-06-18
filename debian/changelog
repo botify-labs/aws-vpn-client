@@ -1,12 +1,15 @@
-aws-vpn (0.5) UNRELEASED; urgency=medium
+aws-vpn (0.6) UNRELEASED; urgency=medium
 
   [ FlavienMontois ]
   * CI
   * doc-nitpicks
   * remove some variables
   * check if version is latest
+  * --kill
+  * compile server.go
+  * CI only push changelog
 
- --  <flavien.montois@botify.com>  Mon, 10 Jun 2024 10:02:28 +0000
+ --  <flavien.montois@botify.com>  Tue, 18 Jun 2024 07:35:43 +0000
 
 aws-vpn (0.1) unstable; urgency=low
 
