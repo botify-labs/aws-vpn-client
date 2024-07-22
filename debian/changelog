@@ -1,4 +1,4 @@
-aws-vpn (0.7) UNRELEASED; urgency=medium
+aws-vpn (0.8) UNRELEASED; urgency=medium
 
   [ FlavienMontois ]
   * CI
@@ -9,8 +9,9 @@ aws-vpn (0.7) UNRELEASED; urgency=medium
   * compile server.go
   * CI only push changelog
   * use openvpn-2.6.11
+  * check new release and ask to upgrade
 
- --  <flavien.montois@botify.com>  Mon, 24 Jun 2024 08:47:10 +0000
+ --  <flavien.montois@botify.com>  Mon, 22 Jul 2024 13:17:34 +0000
 
 aws-vpn (0.1) unstable; urgency=low
 
