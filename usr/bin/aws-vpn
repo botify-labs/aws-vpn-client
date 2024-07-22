@@ -57,6 +57,13 @@ check_update() {
   local latest_major="$(echo $latest_ver | cut -d. -f1)"
   if [[ $current_minor -lt $latest_minor || $current_major -lt $latest_major ]]; then
     echo -e "\033[1;33mNew version of aws-vpn is available\033[0m"
+    read -p "Do you wish to install it? (Y/n): " answer
+    if [[ $answer == "Y" || $answer == "y" || $answer == "" ]]; then
+      wget -O /tmp/aws-vpn_${latest_major}.${latest_minor}_amd64.deb https://github.com/botify-labs/aws-vpn-client/releases/download/${latest_major}.${latest_minor}/aws-vpn_${latest_major}.${latest_minor}_amd64.deb &>>/var/log/aws-vpn.log
+      sudo dpkg -i /tmp/aws-vpn_${latest_major}.${latest_minor}_amd64.deb &>>/var/log/aws-vpn.log
+      sudo rm /tmp/aws-vpn_${latest_major}.${latest_minor}_amd64.deb
+      echo -e "\033[0;32maws-vpn updated sucessfully to version ${latest_major}.${latest_minor}\033[m"
+    fi
   fi
 }
 
@@ -113,7 +120,7 @@ fi
 # Clean prvious saml file
 rm -f /tmp/saml-response.txt
 
-check_update >&3
+check_update 2>&3 >&3
 
 OVPN_OUT=$($OVPN_BIN --config "${OVPN_CONF}" --verb 3 \
      --auth-user-pass <( printf "%s\n%s\n" "N/A" "ACS::35001" ) \
