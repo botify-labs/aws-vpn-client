@@ -26,7 +26,7 @@ If you want to built it yourself :
 sudo apt install dh-make dpkg-dev -y
 
 # Build dependencies
-sudo apt install libssl-dev liblzo2-dev libpam0g-dev libnl-3-dev libnl-genl-3-dev libcap-ng-dev -y
+sudo apt install libssl-dev liblzo2-dev libpam0g-dev libnl-3-dev libnl-genl-3-dev libcap-ng-dev liblz4-dev -y
 
 # Build and install the DEB package
 dpkg-buildpackage -b -rfakeroot -tc -us -uc
