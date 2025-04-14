@@ -1,4 +1,4 @@
-aws-vpn (0.9) UNRELEASED; urgency=medium
+aws-vpn (0.10) UNRELEASED; urgency=medium
 
   [ FlavienMontois ]
   * CI
@@ -15,7 +15,14 @@ aws-vpn (0.9) UNRELEASED; urgency=medium
   * Create the v2.6.12 version
   * Use the right patch
 
- --  <flavien.montois@botify.com>  Mon, 22 Jul 2024 15:01:50 +0000
+  [ Adrien Saladin ]
+  * Update README.md
+
+  [ dauving ]
+  * Update to OpenVPN v2.6.14
+  * Add build-essential to the build instance
+
+ --  <flavien.montois@botify.com>  Mon, 14 Apr 2025 12:40:28 +0000
 
 aws-vpn (0.1) unstable; urgency=low
 
